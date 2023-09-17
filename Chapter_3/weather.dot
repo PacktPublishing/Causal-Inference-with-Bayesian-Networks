@@ -1,0 +1,6 @@
+digraph "" {
+	play -> outlook;
+	play -> temperature;
+	play -> humidity;
+	play -> windy;
+}

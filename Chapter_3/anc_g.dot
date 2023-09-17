@@ -1,0 +1,9 @@
+digraph "" {
+	asia -> tub;
+	tub -> either;
+	smoke -> lung;
+	smoke -> bronc;
+	lung -> either;
+	bronc -> dysp;
+	either -> dysp;
+}
