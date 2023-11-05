@@ -1,5 +1,0 @@
-strict graph "" {
-	asia;
-	smoke -- bronc;
-	bronc -- either;
-}
