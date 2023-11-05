@@ -1,0 +1,12 @@
+strict graph "" {
+	A -- T;
+	S -- L;
+	S -- B;
+	T -- L;
+	T -- E;
+	L -- E;
+	E -- B;
+	E -- X;
+	E -- D;
+	B -- D;
+}
