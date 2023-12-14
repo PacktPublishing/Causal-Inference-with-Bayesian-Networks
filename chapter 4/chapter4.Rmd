@@ -1,0 +1,266 @@
+---
+title: "chapter 4"
+author: "yousri elfattah"
+date: "2023-12-09"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+
+# Chapter 4
+
+## Required libraries
+
+Running the code in this document requires installing the following R libraries:
+
+install.packages(c('dagitty','ggdag','ggplot2','mvtnorm'))
+
+```{r}
+#Library to create and analyze causal graphs
+library(dagitty)
+#library to plot causal graphs 
+library(ggdag) 
+library(ggplot2)
+#library for multivariate normal and t distributions
+library(mvtnorm)
+library(dosearch)
+```
+
+## Example 4.1- Causal Graph
+
+```{r}
+# Example: DAG with one exposure, and one outcome, and two covariates
+g <- dagitty("dag{
+  X -> Y 
+  X <- Z -> I 
+  X -> I -> Y
+  X [exposure]
+  Y [outcome]
+}") 
+# set coordinates for graph layout
+coords<-list(X=c(X=1, Z=2, I=3, Y=4),
+             Y=c(X=1, Z=3, I=2, Y=1))
+coords_df<-coords2df(coords)
+
+coordinates(g)<-coords2list(coords_df)
+#Plot causal graph
+ggdag_status(g) + theme_dag()
+```
+
+Find all paths in g and their open status
+
+```{r}
+paths(g)
+```
+
+Find all causal (directed) between "X" and "Y"
+
+```{r}
+paths(g, "X", "Y", directed= TRUE)$paths
+```
+
+Find all descendants of "Z"
+
+```{r}
+descendants(g, "Z")
+```
+
+Find all ancestors of "Y"
+
+```{r}
+ancestors(g, "Y")
+```
+
+Find all conditional independencies
+
+```{r}
+impliedConditionalIndependencies(g)
+```
+
+Check if "Y" and "Z" are dconnected given "I"
+
+```{r}
+dconnected(g, "Y", "Z", "I")
+```
+
+Check if "Y" and "Z" are dseparated given "X" and "I"
+
+```{r}
+dseparated(g, "Y", "Z", c("X","I"))
+```
+
+## Example 4.2 [Instrument Structure]
+
+```{r}
+#create graph
+g <- dagitty("dag{
+  T -> Y 
+  I -> T <- C -> Y
+  T [exposure]
+  Y [outcome]
+}") 
+#Set position of nodes 
+coords<-list(x=c(I = 0, T = 1, C = 2, Y = 3),
+             y=c(I = 0, T = 0, C = 1, Y = 0)) 
+coords_df<-coords2df(coords)
+
+coordinates(g)<-coords2list(coords_df)
+#Plot causal graph
+ggdag_status(g) + theme_dag()
+
+```
+
+Finding paths between "T" and "Y". There are two open paths: a causal path T-\>Y, and a biasing path I\<-C-\>Y.
+
+```{r}
+paths(g, "T", "Y")
+```
+
+If the confounder "C" is unobserved (i.e., a latent variable in the structured equation model), verify that under linearity assumptions of the structured equation model, "I" can be used as an instrumental variable to infer the total effect of an exposure "T" on an outcome "Y" in the presence of latent confounding.
+
+```{r}
+instrumentalVariables(g, "T", "Y" )
+
+```
+
+## Example 4.3 [Model M1]
+
+### Plot causal graph
+
+```{r}
+# cleans workspace
+rm(list = ls())
+#-----------------------
+# dagify: Create a dagitty DAG using R-like syntax
+# ~  "regressed on" 
+# ~~ "covaries with"
+#-----------------------
+g1 <- dagify(
+  Y ~ T + Z,
+  T ~~ Z
+)
+# set coordinates for graph layout
+coords<-list(X=c(Z = 1, T = 1, Y = 2),
+             Y=c(Z = 2, T = 1, Y = 1))
+coords_df<-coords2df(coords)
+
+coordinates(g1)<-coords2list(coords_df)
+#Plot causal graph
+ggdag(g1)+theme_dag()
+```
+
+### Simulate observational data set
+
+```{r}
+# simulate data (linear model)
+n <- 1e4
+# we will generate correlated, normal random variables with the program rmmvnorm in the mvtnorm library
+out <- rmvnorm(n, mean = c(0, 0), 
+               sigma = matrix(c(1,.8, .8, 1), 2, 2))
+Z <- out[,1]
+T <- out[,2]
+Y <- 0.5 * T + 0.7 * Z + rnorm(n)
+model.data <- data.frame (
+  Z <- Z,
+  T <- T,
+  Y <- Y
+)
+```
+
+Find adjustment sets for path coefficient from "T" to "Y"
+
+```{r}
+print( adjustmentSets(g1, "T", "Y"))
+```
+
+Linear regression without adjustment is biased
+
+```{r}
+coef(lm(Y ~ T))
+```
+
+Regression with adjustment is unbiased
+
+```{r}
+coef(lm(Y ~ T + Z))
+```
+
+## Example 4.4 [Model M2]
+
+### Plot causal graph
+
+```{r}
+#create graph
+g <-dagify(T~C,Y~T+C) 
+#Set position of nodes 
+coords<-list(x=c(T = 0, C = 1, Y = 2),
+             y=c(T = 0, C = 1, Y = 0)) 
+coords_df<-coords2df(coords)
+coordinates(g)<-coords2list(coords_df)
+
+#Plot causal graph  
+ggdag(g)+theme_dag()
+
+
+```
+
+### Simulate observational data set
+
+```{r}
+# simulate data (linear model)
+n <- 1e4
+C <- rnorm(n)
+T <- 0.5 * C + rnorm(n)
+Y <- 0.7 * T + 1.2 * C + rnorm(n)
+model.data <- data.frame (
+  Z <- Z,
+  T <- T,
+  Y <- Y
+)
+```
+
+Find adjustment sets for path coefficient from "T" to "Y"
+
+```{r}
+print( adjustmentSets(g, "T", "Y"))
+```
+
+Unadjusted estimate is confounded
+
+```{r}
+coef(lm(Y ~ T))
+```
+
+Adjusting for C recovers the causal effect
+
+```{r}
+coef(lm(Y ~ T + C))
+```
+
+## Example 4.5 [Intervention Conditioning]
+
+```{r}
+data1 <- "P(x,y)"
+query1 <- "P(y|do(x))"
+graph1 <- "
+   x -> y
+ "
+dosearch(data1, query1, graph1)
+```
+
+```{r}
+data2 <- "P(x,y)"
+query2 <- "P(y|do(x))"
+graph2 <- "
+   y -> x
+ "
+dosearch(data2, query2, graph2)
+```
