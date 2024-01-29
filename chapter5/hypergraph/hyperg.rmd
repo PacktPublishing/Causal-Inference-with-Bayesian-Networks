@@ -1,0 +1,78 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+The [R plugin](https://www.jetbrains.com/help/pycharm/r-plugin-support.html) for IntelliJ-based IDEs provides
+handy capabilities to work with the [R Markdown](https://www.jetbrains.com/help/pycharm/r-markdown.html) files.
+To [add](https://www.jetbrains.com/help/pycharm/r-markdown.html#add-code-chunk) a new R chunk,
+position the caret at any line or the code chunk, then click "+".
+
+The code chunk appears:
+```{r}
+library(HyperG)
+
+hg1 <- hypergraph_from_edgelist(list(c("A","E","F"),c("A","B","C"),c("A","C","E"),c("C","D","E")))
+plot(hg1)
+```
+```{r}
+hg1 <- hypergraph_from_edgelist(list(c("A","E","F"),c("A","B","C"),c("A","C","E"),c("C","D","E")))
+summary(hg1)
+
+```
+```{r}
+library(gRbase)
+hg1 <- hypergraph_from_edgelist(list(c("A","E","F"),c("A","B","C"),c("A","C","E"),c("C","D","E")))
+g <- as.graph(hg1)
+jt <- jTree(g)
+jt
+plot(jt)
+```
+```{r}
+hg1 <- hypergraph_from_edgelist(list(c("A","E","F"),c("A","B","C"),c("A","C","E"),c("C","D","E")))
+# is.hypergraph(hg1)
+# is.chordal(hg1)
+is.hypertree(hg1)
+```
+```{r}
+
+```
+```{r}
+
+```
+
+
+Type any R code in the chunk, for example:
+```{r}
+
+is.hypergraph(hg1)
+# hg2 <- induced_hypergraph(hg1)
+# is.hypertree(hg1)
+is.tree(hg1)
+```
+```{r}
+g <- as.graph(hg1)
+jt <- jTree(g)
+jt
+plot(jt)
+```
+```{r}
+
+
+
+```
+```{r}
+hg2 <- hypergraph_from_edgelist(list(c("A","B","C"),c("A","C","E"),c("A","B","F","G"),c("AC","B","D")))
+# is.hypergraph(hg1)
+# is.chordal(hg1)
+is.hypertree(hg2)
+```
+```{r}
+
+```
+```{r}
+
+```
+
+Now, click the **Run** button on the chunk toolbar to [execute](https://www.jetbrains.com/help/pycharm/r-markdown.html#run-r-code) the chunk code. The result should be placed under the chunk.
+Click the **Knit and Open Document** to build and preview an output.

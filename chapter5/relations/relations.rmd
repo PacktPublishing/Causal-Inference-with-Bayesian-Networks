@@ -1,0 +1,114 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+The [R plugin](https://www.jetbrains.com/help/pycharm/r-plugin-support.html) for IntelliJ-based IDEs provides
+handy capabilities to work with the [R Markdown](https://www.jetbrains.com/help/pycharm/r-markdown.html) files.
+To [add](https://www.jetbrains.com/help/pycharm/r-markdown.html#add-code-chunk) a new R chunk,
+position the caret at any line or the code chunk, then click "+".
+
+The code chunk appears:
+```{r}
+if(!require('relations')) {
+  install.packages('relations')
+  library('relations')
+}
+```
+
+
+
+
+
+
+## Relation r1(x, y, z)
+```{r}
+r1 <-
+  data.frame(
+    x = c(1, 1, 2, 1),
+    y = c(2, 3, 1, 4),
+    z = c(1, 2, 4, 2)
+  )
+r1 <- as.relation(r1)
+relation_table(r1)
+```
+## the selection operation
+```{r}
+relation_table(relation_selection(relation_selection(r1, x==1), y<4))
+```
+## the projection operation
+```{r}
+relation_table(relation_projection(r1, c("x", "y")))
+```
+## Relation r2(x,z,w)
+```{r}
+r2 <-
+  data.frame(
+    x = c(1, 2, 1, 1),
+    z = c(2, 4, 2, 4),
+    w = c(3, 1, 2, 2)
+  )
+r2 <- as.relation(r2)
+relation_table(r2)
+```
+```{r}
+relation_table(r1 %|><|% r2)
+
+
+
+```
+```{r}
+xy <-
+  data.frame(
+    x = c(0, 1, 2),
+    y = c(1, 3, 5)
+  )
+xy <- as.relation(xy)
+relation_table(xy)
+
+```
+```{r}
+yz <-
+  data.frame(
+    y = c(1, 3, 5),
+    z = c(2, 8, 4)
+  )
+yz <- as.relation(yz)
+relation_table(yz)
+```
+```{r}
+zx <-
+  data.frame(
+    z = c(2, 8, 4),
+    x = c(1, 2, 0)
+  )
+zx <- as.relation(zx)
+relation_table(zx)
+```
+```{r}
+relation_table(xy %|><|% yz )
+relation_table(yz %|><|% zx )
+relation_table(xy %|><|% yz %|><|% zx)
+```
+```{r}
+require("sets")
+R <- relation(domain = c("a0", "b0", "b1", "c0", "c1", "d0", "d1", "e0", "e1"),
+              graph = set(c("d0", "b1"), c("d1", "b0"), c("d1", "b1"),
+                          c("d1", "e1"), c("d1", "e0"), c("d0", "e1"),
+                          c("a0", "b0"), c("a0", "b1"),
+                          c("b0", "c1"), c("b1", "c1"), c("b1", "c0")))
+plot(R)
+relation_properties(R)
+```
+```{r}
+require("sets")
+rel <- relation(domain = c("A", "B", "C", "D", "E", "F"),
+              graph = set(c("A", "B"), c("A", "C"), c("B", "C"), c("C", "F"),
+                          c("B", "D"), c("B", "E"), c("D", "E"),
+                          c("E", "F"), c("D", "F")))
+plot(rel)
+relation_is_acyclic(rel)
+```
+
+Now, click the **Run** button on the chunk toolbar to [execute](https://www.jetbrains.com/help/pycharm/r-markdown.html#run-r-code) the chunk code. The result should be placed under the chunk.
+Click the **Knit and Open Document** to build and preview an output.
