@@ -1,0 +1,13 @@
+"","weather","forecast","umbrella","Weight"
+"1","no_rain","sunny","take_it",9.8
+"2","no_rain","sunny","leave_it",49
+"3","no_rain","cloudy","take_it",2.8
+"4","no_rain","cloudy","leave_it",14
+"5","no_rain","rainy","take_it",1.4
+"6","no_rain","rainy","leave_it",7
+"7","rain","sunny","take_it",3.15
+"8","rain","sunny","leave_it",0
+"9","rain","cloudy","take_it",5.25
+"10","rain","cloudy","leave_it",0
+"11","rain","rainy","take_it",12.6
+"12","rain","rainy","leave_it",0

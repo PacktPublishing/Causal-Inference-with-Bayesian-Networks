@@ -1,0 +1,5 @@
+"","weather","umbrella","Weight"
+"1","no_rain","take_it",20
+"2","no_rain","leave_it",100
+"3","rain","take_it",70
+"4","rain","leave_it",0

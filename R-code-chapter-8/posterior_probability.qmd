@@ -1,0 +1,127 @@
+---
+title: "posterior_probability"
+author: "Yousri El Fattah"
+format: html
+---
+
+```{r}
+source('functions.R')
+```
+
+# Applying the QCG Algorithm
+
+## Posterior Probability Inference 
+
+### Example Bayesian Network
+
+```{r}
+P_X <- data.frame(X = c(0,1),
+                  Weight = c(0.75, 0.25),
+                stringsAsFactors = FALSE)
+P_Y_X <- data.frame(X = c(0,0,1,1),
+                    Y = c(0,1,0,1),
+                    Weight = c(0.2,0.8,0.9,0.1),
+                    stringsAsFactors = FALSE)
+P_Z_Y <- data.frame(Y = c(0,0,1,1),
+                    Z = c(0,1,0,1),
+                    Weight = c(1,0,0.25,0.75),
+                    stringsAsFactors = FALSE)
+```
+
+### Initialization 
+
+#### Incorporate the evidence Z=1
+
+```{r}
+P_Z_Y <- cond(P_Z_Y, c("Z"), c(1))
+print(P_Z_Y)
+```
+
+#### Create variable-relations association
+
+```{r}
+assoc1 <- assoc(list(P_X, P_Y_X, P_Z_Y), c("X", "Y", "Z"))
+print(assoc1)
+```
+
+### Step 1 Eliminate Z
+
+Combination query on list of relations associated with Z in the assoc1 dictionary
+
+```{r}
+q_comb_Z = comb_list(assoc1$Z)
+
+```
+
+```{r}
+print(q_comb_Z)
+```
+
+Elimination query to eliminate Z from the weighted relation factor resulting from the composition query for Z
+
+```{r}
+q_elim_Z = elim(q_comb_Z, "Z")
+print(q_elim_Z)
+```
+
+#### Posterior Probability for Y
+
+The posterior probability for Y corresponds to the normalization of the weighted relation factor resulting from the elimination query for Z
+
+```{r}
+prob_Y <- q_elim_Z
+prob_Y$Weight <- prob_Y$Weight/sum(prob_Y$Weight)
+print(prob_Y)
+```
+
+#### Update Variable-Relations associations dictionary assoc1
+
+Add to dictionary the weighted relation factor resulting from the elimination query for Z, q_elim_Z ; and remove the variable Z from dictionary
+
+```{r}
+assoc2 <- add_relation_remove_var(assoc1, q_elim_Z, "Z")
+print(assoc2)
+```
+
+#### Step 2 Eliminate Y
+
+Combination query on list of relations associated with Y in the assoc2 dictionary
+
+```{r}
+q_comb_Y <- comb_list(assoc2$Y)
+print(q_comb_Y)
+```
+
+Elimination query to eliminate Y from the weighted relation factor resulting from the composition query for Y
+
+```{r}
+q_elim_Y <- elim(q_comb_Y, "Y")
+print(q_elim_Y)
+```
+
+#### Update Variable-Relations associations dictionary assoc2
+
+Add to dictionary the weighted relation factor resulting from the elimination query for Y, q_elim_Y ; and remove the variable Y from dictionary
+
+```{r}
+assoc3 <- add_relation_remove_var(assoc2, q_elim_Y, "Y")
+print(assoc3)
+
+```
+
+Combination query on list of relations associated with X in the assoc3 dictionary
+
+```{r}
+q_comb_X <- comb_list(assoc3$X)
+print(q_comb_X)
+```
+
+#### Posterior Probability for X
+
+The posterior probability for X corresponds to the normalization of the weighted relation factor resulting from the combination query for X
+
+```{r}
+prob_X <- q_comb_X
+prob_X$Weight <- prob_X$Weight/sum(prob_X$Weight)
+print(prob_X)
+```

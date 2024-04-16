@@ -1,0 +1,162 @@
+---
+title: "influence_diagram"
+format: html
+---
+
+```{r}
+source('functions.R')
+```
+
+# Variable Elimination - Decision Networks
+
+## Example (Weather Decision Network)
+
+In the example we have two chance nodes, 1) weather, that represents the random variable of the weather on any day either has rain or no rain; 2) forecast, a random variable that depends on the weather and is a noisy signal of the weather. The forecast can be sunny, cloudy, or rainy.
+
+### Weighted relations for the chance nodes factors
+
+In the example, we have two chance nodes: 1) weather, which represents the random variable of the weather on any day, either rain or no rain; 2) forecast, a random variable that depends on the weather and is a noisy signal of the weather. The forecast can be sunny, cloudy, or rainy.
+
+The following two weighted relations define the factored probabilistic model of the weather decision network. The first factor, weather, gives the prior probability of weather: rain with a probability of 0.3 and no rain with a probability of 0.7. The second factor, forecast, gives the forecast's conditional probability given the weather's state. If the weather is no rain, the forecast is sunny with a probability of 0.7, cloudy with a probability of 0.2, and rainy with a probability of 0.1. If the weather equals rain, the forecast is sunny with a probability of 0.15, cloudy with a probability of 0.25, and rainy with a probability of 0.6. The Weight attribute when eliminating a chance node represents a probability where the 'FUN' parameter equals 'sum' for summation. The Weight attribute when eliminating a decision node represents a utility function where the 'FUN' parameter equals 'max' for maximization.
+
+When combining weighted relations we note the following:
+
+-   If the combined relations contain at least one relation for chance variables then the 'FUN' for the 'comb' function is a multiplication '\*'.
+
+-   If the combined relations are all representing utilities then the the 'FUN' for the 'comb' function is a multiplication '+'.
+
+```{r}
+weather <- data.frame(
+                  weather = c('no_rain',"rain"),
+                  Weight = c(0.7, 0.3),
+                  stringsAsFactors = FALSE)
+forecast <- data.frame(
+  weather=c('no_rain','no_rain','no_rain','rain','rain','rain'),
+  forecast=c('sunny','cloudy','rainy','sunny','cloudy','rainy'),
+  Weight=c(0.7,0.2,0.1,0.15,0.25,0.6),
+                  stringsAsFactors = FALSE)
+```
+
+## Weighted relations for the utility node's factor
+
+```{r}
+utility <- data.frame(
+      weather = c('no_rain','no_rain','rain','rain'),
+      umbrella = c('take_it','leave_it','take_it','leave_it'),
+      Weight = c(20, 100, 70, 0),
+                  stringsAsFactors = FALSE)
+```
+
+```{r}
+write.csv(weather,file = "weather.csv")
+write.csv(forecast,file = "forecast.csv")
+write.csv(utility,file = "utility.csv")
+```
+
+### Initialization
+
+#### Create variable-relations association dictionary: 'assoc1'
+
+Create variable-relations association. Select the variable ordering for the nodes of the influence diagram: 1) forecast, 2) umbrella, 3) weather.
+
+```{r}
+assoc1 <- assoc(list(forecast, utility, weather), c("forecast", "umbrella", "weather"))
+print(assoc1)
+```
+
+### Step 1 Eliminate chance node: 'Weather'
+
+#### Combination query: 'q_comb_weather'
+
+Combination query on list of relations associated with 'weather' in the assoc1 dictionary
+
+```{r}
+q_comb_weather = comb_list(assoc1$weather)
+print(q_comb_weather)
+write.csv(q_comb_weather,file = "q_comb_weather.csv")
+```
+
+#### Elimination qurey: 'q_elim_weather'
+
+Elimination query to eliminate 'weather' from the weighted relation factor induced from the composition query for 'weather'
+
+```{r}
+q_elim_weather <- elim(q_comb_weather,"weather")
+print(q_elim_weather)
+write.csv(q_elim_weather,file = "q_elim_weather.csv")
+```
+
+#### Mutate Variable-Relations association dictionary: 'assoc2'
+
+We use the function 'add_relation_remove_var' to update the current dictionary; the input parameters are the current dictionary 'assoc1' and the eliminated variable 'weather'. The result is a mutation of the current dictionary to the new dictionary 'assoc2' where the induced relation of the query 'q_elim_weather' is added, and the the eliminated variable 'weather' is removed.
+
+```{r}
+assoc2 <- add_relation_remove_var(assoc1, q_elim_weather, "weather")
+print(assoc2)
+
+```
+
+### Step 2 Eliminate decision node: 'Umbrella'
+
+Since there is only one weighted relation associated with the decision node 'umbrella' in the dictionary 'assoc2', we can bypass the combination query and just run the elimination query, q_elim_umbrella, using the 'elim' function with the input parameters being:
+
+-   the weighted relation associated with 'umbrella' which is 'q_elim_weather'
+
+-   the variable to eliminate which is 'umbrella'
+
+-   the 'FUN' parameter set to 'max' specifying the aggregation function on the Weight attribute to be a maximization for the Weight is representing a utility that we need to maximize
+
+```{r}
+q_elim_umbrella <- elim(q_elim_weather, "umbrella", FUN = max)
+print(q_elim_umbrella)
+write.csv(q_elim_umbrella,file = "q_elim_umbrella.csv")
+```
+
+#### Mutate Variable-Relations association dictionary: 'assoc3'
+
+We use the function 'add_relation_remove_var' to update the current dictionary; the input parameters are the previous dictionary 'assoc2' and the eliminated variable 'umbrella'. The result is a mutation of the previous dictionary to the current dictionary 'assoc3' where the induced relation of the query 'q_elim_umbrella' is added and the the elimination variable 'umbrella' is removed.
+
+```{r}
+assoc3 <- add_relation_remove_var(assoc2, q_elim_umbrella, "umbrella")
+print(assoc3)
+
+```
+
+### Step 3  Computing the expected utility for all policies
+
+The 'forecast' node is the last node so we are ready to compute the maximum expected utility and associated decision policy. There is only one relation associated with the last node in the elimination ordering which is the 'forecast' node. There is no need to use the 'comb_list' function.
+
+To compute the expected utility for all situation-decision policy pairs where the situation refers to the value of the 'forecast' node and the decision refers to the value of the 'umbrella' node.
+
+In this decision network the expected utility equals the inner-join of the relation associated with 'forecast' in the 'assoc3' dictionary and the relation associated with 'umbrella' in the 'assoc2' dictionary.
+
+```{r}
+r_forecast <- assoc3$forecast[[1]]
+r_umbrella <- assoc2$umbrella[[1]]
+print(r_forecast)
+print(r_umbrella)
+```
+
+To perform the inner-join we will use the inner-join operator imported from the 'dplry' package.
+
+```{r}
+library(dplyr)
+#
+# Perform inner join 
+policy_EU <- dplyr::inner_join(r_forecast, r_umbrella, by = c("forecast","Weight"))
+
+
+print(policy_EU)
+write.csv(policy_EU,"policy_EU.csv")
+
+
+
+
+```
+
+### Step 6 Maximum Expected Utility
+
+```{r}
+MEU <- sum(policy_EU$Weight)
+print(MEU)
+```

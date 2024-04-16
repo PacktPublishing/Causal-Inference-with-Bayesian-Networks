@@ -1,0 +1,133 @@
+---
+title: "queries"
+format: html
+---
+
+```{r}
+source('functions.R')
+```
+
+### Example (projection query)
+
+The input data frame represents the table specifying a weighted relation on three variables: X, Y, and Z. The projection query projects the input relation on the input variables X and Y. It's important to note that the query uses summation as the aggregation function, which plays a vital role in the calculation process.
+
+```{r}
+r1_X_Y_Z <- data.frame(X=c(0,0,0,1,1),
+                       Y=c(0,0,1,0,0),
+                       Z=c(0,1,1,0,1),
+                       Weight = c(0.3,0.3,0.2,0.1,0.1),
+                       stringsAsFactors = FALSE)
+result <- project(r1_X_Y_Z, c("Y","Z"))
+print(result)
+```
+
+### Example (projection query)
+
+The input data frame is a table of a weighted relation on X, Y, and Z. The following projects the relation on X and Y. We explicitly specify the \`FUN\` parameter as \`max\`, which results in applying the \`max\` of the weights to obtain the maximum utility for X and Y overall values of Z.
+
+```{r}
+r2_X_Y_Z <-
+        data.frame(X = c(0,0,0,0,1,1,1,1),
+                   Y = c(0,0,1,1,0,0,1,1),
+                   Z = c(0,1,0,1,0,1,0,1),
+                   Weight = c(1,2,5,3,7,4,6,5),
+                   stringsAsFactors = FALSE)
+
+result1 <- project(r2_X_Y_Z, c("X","Y"),FUN=max)
+print(result1)
+```
+
+### Example (conditioning query)
+
+The following uses the \`cond\` operator on the weighted relation \`r2_X_Y_Z\` to select only tuples with value assignment \`X=0\` and \`Y=1\`.
+
+```{r}
+r2_X_Y_Z <-
+        data.frame(X = c(0,0,0,0,1,1,1,1),
+                   Y = c(0,0,1,1,0,0,1,1),
+                   Z = c(0,1,0,1,0,1,0,1),
+                   Weight = c(1,2,5,3,7,4,6,5),
+                   stringsAsFactors = FALSE)
+
+result <- cond(r2_X_Y_Z, c("X","Y"), c(0, 1))
+print(result)
+```
+
+### Example (combination query)
+
+The example combines two potential functions: 1) phi_X_Y on the variables X and Y, and 2) phi_Y_Z on Y and Z. The comb function joins phi_X_Y and phi_Y_Z, multiplying the "Weight" attribute of joined tuples, tuples matching on the value of the shared Y attribute. The result is a joint probability on the combined variables X, Y, and Z.
+
+```{r}
+phi_X_Y <- data.frame(X = c(0,0,1,1),
+                      Y = c(0,1,0,1),
+                      Weight = c(0.15, 0.6, 0.225, 0.025),
+                      stringsAsFactors = FALSE)
+
+phi_Y_Z <- data.frame(Y = c(0,1,1),
+                      Z = c(0,0,1),
+                      Weight = c(1, 0.25, 0.75),
+                      stringsAsFactors = FALSE)
+
+# Run the function
+rel <- comb(phi_X_Y, phi_Y_Z, FUN="*")
+
+# Print the resulting relation.
+print(rel)
+```
+
+### Example (combination query)
+
+Consider two utility functions, f1(X, Y) and f2(Y, Z), represented by the two weighted relations r1 and r2 in the code below. We combine the two relations to get the sum of the two functions, a function of the three variables f(X, Y, Z), defined by the result of the combination query. Note that we specify the combining function as "+" for summing the "Weights" of the relations r1 and r2 joined tuples instead of multiplying them as in the case by default.
+
+```{r}
+r1 <- data.frame(X = c(0,0,1,1),
+                 Y = c(0,1,0,1),
+            Weight = c(4,8,0,5),
+            stringsAsFactors = FALSE)
+
+r2 <- data.frame(Y = c(0,1,1),
+                 Z = c(0,0,1),
+            Weight = c(0,5,6),
+            stringsAsFactors = FALSE) 
+# Run the function
+rel <- comb(r1, r2, FUN="+")
+
+# Print the resulting relation.
+print(rel)
+```
+
+### Example (Combining a list of relations)
+
+We consider an example of a Bayesian network with conditional probabilities as weighted relations. We use the comb_list function to combine the conditional probabilities for the three-node network to compute the joint probability distribution.
+
+```{r}
+P_X <- data.frame(X = c(0,1),
+                  Weight = c(0.75, 0.25),
+                stringsAsFactors = FALSE)
+P_Y_X <- data.frame(X = c(0,0,1,1),
+                    Y = c(0,1,0,1),
+                    Weight = c(0.2,0.8,0.9,0.1),
+                    stringsAsFactors = FALSE)
+P_Z_Y <- data.frame(Y = c(0,0,1,1),
+                    Z = c(0,1,0,1),
+                    Weight = c(1,0,0.25,0.75),
+                    stringsAsFactors = FALSE)
+JPD <- comb_list(list(P_X,P_Y_X,P_Z_Y))
+print(JPD)
+```
+
+### Example (Add Relation Remove Variable) 
+
+The following example shows how to use the 'assoc' function to create the variable-relations association dictionary and how to update the dictionary throughout the execution of the QCG algorithm by using the 'add_relation_remove_var' function to add the induced relations from the elimination step to the dictionary and also remove the eliminated variable from the dictionary.
+
+```{r}
+f_X <- data.frame(X = c(0,0,1), Weight = c(3,5,7), stringsAsFactors = FALSE)
+f_Y <- data.frame(Y = c(1,0,1), Weight = c(2,10,6), stringsAsFactors = FALSE)
+f_Z <- data.frame(Z = c(1,1,0), Weight = c(4,3,1), stringsAsFactors = FALSE)
+
+dict = assoc(list(f_X,f_Y,f_Z),c("X","Y","Z"))
+f_X_Y <- data.frame(X = c(0,0,1,1), Y = c(0,1,0,1), Weight = c(9,3,4,7), stringsAsFactors = FALSE)
+
+dict2 <- add_relation_remove_var(dict, f_X_Y, "Z")
+print(dict2)
+```
