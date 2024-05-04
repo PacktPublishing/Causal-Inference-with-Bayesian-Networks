@@ -1,0 +1,14 @@
+digraph "" {
+	X -> Z;
+	X -> D;
+	Y -> Z;
+	Y -> E;
+	Z -> D;
+	Z -> E;
+	D -> F;
+	E -> F;
+	A1 -> Z;
+	A2 -> D;
+	A3 -> E;
+	A4 -> F;
+}
