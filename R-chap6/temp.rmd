@@ -1,0 +1,319 @@
+---
+title: "Chapter 6- Graphs"
+output:
+  word_document: default
+  html_notebook: default
+---
+
+```{r}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("graph")
+```
+
+```{r}
+library(gRbase)
+library(ggm)
+library(igraph)
+library(RBGL)
+library(sets)
+```
+
+## Directed Acyclic Graph
+
+-   We begin by specifying the DAG for the circuit example BN.
+-   To do that, we use the **ggm::DAG()** function
+-   We specify the DAG as a sequence of formulas. We specify the DAG as a sequence of formulas. Each formula defines a node of the graph prefixed by the tilde symbol, followed by all the node's parents separated by the plus symbol.
+-   The DAG returns the adjacency matrix (AMAT) of the DAG. AMAT is an nxn matrix where n is the number of nodes.
+-   The element in row i and column j in AMAT equals one if there is an edge from node i to node j and equals zero otherwise.
+-   The names of the rows and columns of the adjacency matrix are the nodes of the DAG.
+-   If order = TRUE, the adjacency matrix is permuted to have the nodes listed in topological order where parents precede children in the order, with the resulting adjacency matrix being upper triangular.
+
+```{r}
+G <- ggm::DAG(F ~ D+E+A4, D ~ X+Z+A2, E ~ Y+Z+A3, Z ~ X+Y+A1,order=TRUE)
+print(G)
+```
+
+We use the function **ggm::plotGrap()** to plot the DAG from the adjacency matrix.
+
+```{r}
+ggm::plotGraph(G)
+```
+
+Figure shows the visualization of the DAG for the circuit BN model resulting from the execution of the `ggm::plotGraph` function. Notice there are four DAG families corresponding to the nodes "Z," "S,""E," and "F," which are the outputs of the four gates in the circuit. We use the term a DAG family to mean a child node in the DAG and all its parents. We do not use the term DAG family for the root nodes with no parents, which are all the other nodes in the DAG.
+
+We use the **`as()`** function to coerce the AMAT, G, to be represented as an igraph.
+
+```{r}
+dag <- as(G,"igraph")
+```
+
+We use the **igraph::V()** function to get a list of all vertices (nodes) of the dag.
+
+```{r}
+igraph::V(dag)
+```
+
+We use the **igraph::E()** function to return a list of all edges in the dag.
+
+```{r}
+igraph::E(dag)
+```
+
+### Getting DAG families- nodes and their parents
+
+We use the **gRbase::vpardag()** function to get a list of all families in the dag, i.e., nodes and their parents in the dag. We extract the family for the node of the F variable.
+
+```{r}
+vpardag <- gRbase::vpar(dag)
+vpardag$F
+```
+
+### Ancestral Sets and Ancestral Graphs
+
+We use the gRbase::ancestralSet() function to return the ancestral set of a given set A; the ancestral set of A is the union of A with its ancestors in the dag.
+
+```{r}
+gRbase::ancestralSet(c("D","E"),dag)
+```
+
+We use the **gRbase::ancestralGraph()** function to get the ancestral graph of a given set A in the dag. The ancestral graph is the subgraph induced by the ancestral set of A in the dag.
+
+gRbase::ancestralGraph(c("D","E"),dag)
+
+```{r}
+gRbase::ancestralGraph(c("D","E"),dag)
+```
+
+### d-separation
+
+We use **igraph::dSep()** to determine if, in a directed acyclic graph *G*, two sets of nodes, *X* and *Y*, are d-separated by a third set *Z* of nodes. The function takes four arguments. The first argument, *G*, is a Boolean matrix representing the adjacency matrix of a directed acyclic graph. The function does not check the graph's acyclicity. In that order, the following three arguments are nodes X, Y, and Z subsets.
+
+The code below is an example of checking that node {Y,Z} d-separates nodes E and X in the DAG of the circuit example.
+
+(E ⟂ X \| Y, Z)
+
+```{r}
+dSep(G, "E", "X", c("Y","Z"))
+```
+
+## Moralization of the DAG
+
+We use the function **gRbase::moralize()** function to create the moral graph for the DAG, *G*. The moral graph is an undirected graph where all the parents of every node of the DAG are connected.
+
+```{r}
+morG <- gRbase::moralize(G)
+print(morG)
+```
+
+### Print and Plot the undirected moral graph
+
+First, we map the moral graph adjacency matrix *morG* to an **igraph** object Second, we print the nodes and edges of the moral graph Third, We use the function **ggm::plotGraph()** to plot the moral graph, *morG*
+
+```{r}
+m_ug <- as(morG, "igraph")
+print(m_ug)
+
+```
+
+We use the function **ggm::plotGraph()** to plot the moral graph, *morG*
+
+```{r}
+ggm::plotGraph(morG)
+```
+
+#### Getting the Moral Subgraphs for the DAG Families
+
+The moral subgraphs of the DAG families form cliques or complete graphs where all nodes are connected. To demonstrate this
+
+-   We coerce the moral graph *`morG`* to be of type igraph object named `m_ug` using the `as()` function.
+-   We get the moral subgraph for subsets of nodes constituting DAG families.
+
+The following code computes the moral subgraph, ugF, for the DAG family of the node "F" given by the list vpardag\$F. Next, we print the graph, which writes the subgraph nodes and edges.
+
+```{r}
+nodes <- vpardag$F
+print(nodes)
+m_ug <- as(morG, "igraph")
+ugF <- subgraph(m_ug, vpardag$F)
+print(ugF)
+```
+
+### A family in the DAG is a complete Subgraph of the moral graph
+
+Query the undirected moral graph to verify that the DAG family for the node "F" is a complete graph. We use the function `gRbase::querygraph()` to perform the query. For details on the `querygraph()` function see the webpage at <https://www.rdocumentation.org/packages/gRbase/versions/1.3.5/topics/querygraph>
+
+```{r}
+gRbase::querygraph(ugF, "is.complete")
+
+```
+
+### Plot the complete subgraph for the DAG family of the node "F"
+
+We use the `ggm::plotGraph()` to visualize the complete subgraph of the DAG family of node "F."
+
+```{r}
+
+ggm::plotGraph(ugF)
+
+```
+
+### Families in the DAG are complete sets in the moral graph
+
+Verify that all families in the DAG are complete sets in the moral graph. First, we get all the DAG families, then for each of the four families corresponding to the four gates in our circuit BN. Then, as before, we use the function `gRbase::querygraph()` to verify that each moral subgraph is complete.
+
+```{r}
+vpardag <- gRbase::vpar(dag)
+querygraph(morG, "is.complete", vpardag$Z)
+querygraph(morG, "is.complete", vpardag$D)
+querygraph(morG, "is.complete", vpardag$E)
+querygraph(morG, "is.complete", vpardag$F)
+
+
+
+```
+
+Maximal prime subgraph decomposition - an adjacency matrix
+
+```{r}
+ggm::plotGraph(m_ug)
+x <- mpdMAT(morG)
+y <- unlist(x$cliques[1])
+g <- igraph::subgraph(m_ug, y)
+ggm::plotGraph(g)
+```
+
+## Algorithm d_separates
+
+The following code implements the algorithm **d_separtes** To determine if, in a directed acyclic graph *G*, two sets of nodes, *X* and *Y*, are d-separated by a third set, *Z*. The algorithm checks the input sets to ensure they are mutually pairwise disjoint. Also the algorithm
+
+```{r}
+library(igraph) # for the graph data structures
+library(gRbase) # for the ancestralGraph and moralize functions
+
+d_separates <- function(dag, X, Y, Z) {
+    
+  if (!is.vector(X)) { X <- c(X) }
+  if (!is.vector(Y)) { Y <- c(Y) }
+  if (!is.vector(Z)) { Z <- c(Z) }
+  
+  # Ensure X, Y, and Z are disjoint
+  if (length(intersect(X, Y)) > 0 || length(intersect(Y, Z)) > 0 || length(intersect(X, Z)) > 0) {
+    stop("X, Y, and Z must be disjoint sets")
+  }
+  
+  # 1. Get the ancestral graph
+  anG <- gRbase::ancestralGraph(union(X, union(Y, Z)), dag)
+  ggm::plotGraph(anG)
+  
+  # 2. Moralize the ancestral graph
+  m_anG <- gRbase::moralize(anG)
+  ggm::plotGraph(m_anG)
+  
+  # 3. Remove all nodes in Z from m_anG 
+  m2_anG <- delete_vertices(m_anG, Z)
+  ggm::plotGraph(m2_anG)
+
+  # 4. Test if X and Y are connected in m2_anG
+  are_connected <- any(sapply(X, function(x) {
+    # If the minimum distance from x to any node in Y is not infinity, they are connected.
+    min(igraph::distances(m2_anG, v = x, to = Y)) != Inf
+  }))
+
+  return(! are_connected)
+}
+```
+
+```{r}
+print(dag)
+d_separates(dag, "E", "X", c("Y","Z"))
+```
+
+### Triangulating the moral graph
+
+```{r}
+TmG <- gRbase::minimal_triangMAT(morG)
+print(TmG)
+```
+
+Plot the minimally triangulated graph
+
+```{r}
+ggm::plotGraph(TmG)
+```
+
+Check that the triangulated graph is actually triangulated.
+
+Check if the moral graph was already triangulated.
+
+```{r}
+gRbase::is.triangulated(TmG)
+gRbase::is.triangulated(morG)
+
+```
+
+### Maximum cardinality search on the triangulated graph
+
+Get a perfect ordering of the nodes of the triangulated graph using maximum cardinality search. We use the \*\*gRbase::mcsMAT()**\*\*** function which takes the adjacency matrix of an undirected graph as input and returns a perfect ordering of the nodes if it exists. The function provides a check for decomposability of the input undirected graph.
+
+```{r}
+gRbase::mcsMAT(TmG)
+
+```
+
+### Compare the moral and triangulated graphs
+
+Determine if the moral graph and the triangulated are the same and print the edges in both the moral and minimally triangulated graph.
+
+```{r}
+g1 <- as(morG, "igraph")
+g2 <- as(TmG, "igraph")
+igraph::identical_graphs(g1, g2)
+e_g1 <- igraph::E(g1)
+e_g2 <- igraph::E(g2)
+print(e_g1)
+print(e_g2)
+```
+
+Verify that the triangulated graph is chordal.
+
+```{r}
+igraph::is_chordal(g2)
+```
+
+simplicial nodes
+
+A node in an undirected graph is simplicial if its boundary is complete.
+
+```{r}
+gRbase::simplicialNodes(g2)
+```
+
+Verify that the adjacent nodes to a simplical node is a complete set.
+
+```{r}
+neighbors(g2, "A1")
+is.complete(subgraph( g2, unlist(neighbors(g2, "A1"))))
+```
+
+### Maximal prime subgraph decomposition
+
+plot the subgraph for each clique, you can extract each clique from x\$cliques, convert it to a vector using unlist(), create the subgraph with **igraph::subgraph()**, and then plot it using ggm::plotGraph().
+
+```{r}
+x <- gRbase::mpdMAT(TmG)
+for(i in 1:length(x$cliques)){
+  y <- unlist(x$cliques[i])
+  g <- igraph::subgraph(g2, y)
+  print(ggm::plotGraph(g))
+}
+```
+
+## Junction Tree
+
+To compute the junction tree that orders the maximum cliques in a tree-structured representation called a join tree, we use the **gRbase::rip()** function of the gRbase package. The function takes an adjacency matrix representation of a triangulated graph and outputs a join tree data structure. The function prints the maximum cliques and their order, the tree nodes. The RIP function designates each clique node, its parent node, and the list of separators that annotate the edges of the tree that connect the nodes and their parents.
+
+```{r}
+gRbase::rip(TmG)
+```
