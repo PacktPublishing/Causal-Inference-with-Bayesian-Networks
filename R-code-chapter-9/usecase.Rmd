@@ -1,0 +1,116 @@
+---
+title: "chapter_9"
+author: "yousri elfattah"
+date: "2024-06-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+```{r}
+library(ggm)
+library(dagitty)
+```
+
+```{r}
+
+
+shrier_dag <- ggm::DAG(FitnessLevel ~ Coach,
+  TeamMotivation ~ Coach, 
+  NeuromuscularFatigue ~ ConnectiveTissueDisorder, 
+  TissueWeakness ~ ConnectiveTissueDisorder,
+  IntraGameProprioception ~ ContactSport,
+  PreviousInjury ~ ContactSport,
+  NeuromuscularFatigue ~ FitnessLevel,
+  PreGameProprioception ~ FitnessLevel,
+  ConnectiveTissueDisorder ~ Genetics,
+  FitnessLevel ~ Genetics,
+  NeuromuscularFatigue ~ Genetics, 
+  Injury ~ IntraGameProprioception,
+  Injury ~ NeuromuscularFatigue,
+  IntraGameProprioception ~ NeuromuscularFatigue, 
+  WarmUpExercises ~ PreGameProprioception,
+  PreviousInjury ~ TeamMotivation, 
+  WarmUpExercises ~ TeamMotivation,
+  Injury ~ TissueWeakness,
+  IntraGameProprioception ~ WarmUpExercises)
+ggm::plotGraph(shrier_dag)
+```
+
+![shrier](shrier.png)
+
+```{r}
+ggm::plotGraph(shrier_dag)
+```
+
+## Load the Shrier model from the Dagitty library
+
+```{r}
+gs <- dagitty::getExample("Shrier")
+
+
+```
+
+## List testable implications
+
+```{r}
+x <- dagitty::impliedConditionalIndependencies( gs )
+print(length(x))
+print( x )
+```
+
+## Exogenous Variables
+
+Getting the exogenous variables for the sports DAG example
+
+```{r}
+dagitty::exogenousVariables(gs)
+
+```
+
+## List minimal adjustment sets for direct causal effect
+
+The code returns adjustment sets for identifying the average causal effect of "WarmUpExercises" on "Injury"
+
+In a structural equation model (Gaussian graphical model), direct effects are simply the path coefficients.
+
+The following code returns only minimal sufficient adjustment sets.
+
+```{r}
+dagitty::adjustmentSets( gs, "WarmUpExercises", "Injury", effect="direct", type = "minimal" )
+```
+
+## List canonical adjustment sets for total causal effect
+
+The following code returns a single adjustment set that consists of all (possible) ancestors of exposures and outcomes, minus (possible) descendants of nodes on proper causal paths. This canonical adjustment set is always valid if any valid set exists at all.
+
+```{r}
+dagitty::adjustmentSets(gs, "WarmUpExercises", "Injury", effect="total", type = "canonical" )
+```
+
+## List minimal adjustment sets for total causal effect
+
+```{r}
+dagitty::adjustmentSets(gs, "WarmUpExercises", "Injury", effect="total", type = "minimal" )
+```
+
+## Counting number of adjustment sets for total causal effect
+
+```{r}
+list <- dagitty::adjustmentSets(gs, "WarmUpExercises", "Injury", effect="total", type = "all" )
+length(list)
+print(list)
+```
+
+## List instrument variables for identifying direct causal effect
+
+```{r}
+dagitty::instrumentalVariables( gs,"WarmUpExercises", "Injury"  )
+```
+

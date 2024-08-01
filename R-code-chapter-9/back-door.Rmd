@@ -1,0 +1,126 @@
+---
+title: "back-door"
+author: "yousri elfattah"
+date: "2024-07-28"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+
+```{r}
+library(dagitty)
+library(ggdag)
+```
+
+# Chapter 9
+
+## Back-Door Criterion
+
+First we load the causal model named "confounding" from the dagitty library using the function **dagitty::getExample**. We then use the function **dagitty::dagitty** to construct a **`dagitty`** graph object from a textual description and display the causal graph using **ggdag**.
+
+```{r}
+g <- dagitty::getExample("confounding")
+g2 <- dagitty::dagitty(g) 
+ggdag::ggdag_status(g2) + ggdag::theme_dag()
+```
+
+We can list all paths between "E" and "D" using the function **dagitty::paths**. There are five paths from the exposure "E" to the outcome "D" and the other four are biasing backdoor paths.
+
+```{r}
+dagitty::paths(g, "E", "D", directed= FALSE)$paths
+```
+
+We can visualize all paths between "E" and "D" using the function **ggdag::ggdag_paths**
+
+```{r}
+ggdag::ggdag_paths(g2)
+```
+
+We can use the function **dagitty::adjustmentSets** to get the backdoor adjustment sets
+
+```{r}
+dagitty::adjustmentSets(g2)
+```
+
+We verify that the adjustment sets are backdoor adjustments satisfying the backdoor criterion; that is each adjustment set blocks all backdoor paths. It is already clear that the adjustment sets are not descendants of the exposure "E". To verify the adjustment set blocks the backdoor paths we use the function **dagitty::dseparation** to check dseparation between "E" and "D" for the dag after removing the causal link "E -\> D"
+
+```{r}
+dagitty::dseparated( "dag {A -> E ; A -> Z ; B -> D ; B -> Z ;  Z -> D ; Z -> E}","E","D",list("A","Z"))
+```
+
+```{r}
+dagitty::dseparated( "dag {A -> E ; A -> Z ; B -> D ; B -> Z ;  Z -> D ; Z -> E}","E","D",list("B","Z"))
+```
+
+We can visualize the backdoor adjustments using the function **ggdag::ggdag_adjustment_set**
+
+```{r}
+ggdag::ggdag_adjustment_set(g2)
+```
+
+## Simulation data
+
+We generate simulated observational data for the linear Gaussion SCM
+
+```{r}
+# simulate data (linear Gaussain back-door model)
+n <- 1e4
+A <- rnorm(n)
+B <- rnorm(n)
+Z <- 0.3 * A + 0.7 * B + rnorm(n)
+E <- 0.5 * Z + 0.35 * A + rnorm(n)
+D <- 1.2 * E + 0.9 * B + 0.65 * Z + rnorm(n)
+model.data <- data.frame (
+  A <- A,
+  B <- B,
+  Z <- Z,
+  E <- E,
+  D <- D
+)
+```
+
+## Linear regression 
+
+Adjusting for {"A", "Z"}
+
+```{r}
+coef(lm(D ~ E + A + Z, model.data))
+```
+
+Adjusting for {"B", "Z"}
+
+```{r}
+coef(lm(D ~ E + B + Z, model.data))
+```
+
+## Drawing a scatter plot
+
+In this script, the scatter plot is generated using **geom_point()**, and the linear regression line is added with **geom_smooth()** where method = "**lm**" specifies a linear model. The caption includes the estimated slope from the linear regression.
+
+```{r}
+library(ggplot2)
+
+# Recreate model and extract coefficients
+model <- lm(D ~ E + A + Z, model.data)
+model.coefs <- coef(model)
+
+# Create scatter plot of D versus E
+ggplot(model.data, aes(x = E, y = D)) +
+  geom_point(alpha = 0.5, size = 1) +  # Draw points
+  geom_smooth(method = "lm", col = "red") +  # Add linear regression line
+  labs(
+    title = "Scatter plot of D versus E with linear regression line",
+    x = "E",
+    y = "D",
+    caption = paste0("Slope: ", round(model.coefs["E"],2))
+  ) +
+  theme_minimal()
+```

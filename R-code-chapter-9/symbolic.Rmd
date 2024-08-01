@@ -1,0 +1,100 @@
+---
+title: "symbolic"
+author: "yousri elfattah"
+date: "2024-07-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document.
+
+# Chapter 9
+
+## Symbolic Derivation using the dosearch library
+
+### Front-Door Model
+
+```{r}
+library(dagitty)
+library(ggdag)
+g <- dagitty("dag{
+  X <- U -> Y 
+  X -> Z -> Y 
+  X [exposure]
+  Y [outcome]
+  U [unobserved]
+}") 
+# set coordinates for graph layout
+coords <- list(X=c(X=1, Z=2, Y=3, U=2),
+             Y=c(X=1, Z=1, Y=1, U=2))
+coords_df<-coords2df(coords)
+coordinates(g)<-coords2list(coords_df)
+#Plot causal graph
+ggdag::ggdag_status(g) + ggdag::theme_dag()
+```
+
+### Check identifiability
+
+```{r}
+library(dosearch)
+
+## Graph input with 'dagitty'
+if (requireNamespace("dagitty", quietly = TRUE)) {
+  data <- "P(X,Y,Z)"
+  query <- "P(Y|do(X))"
+  g_dagitty <- dagitty::dagitty("dag{
+  X <- U -> Y 
+  X -> Z -> Y 
+  X [exposure]
+  Y [outcome]
+  U [unobserved]
+}") 
+res <-  dosearch(data, query, g_dagitty)
+}
+dosearch::is_identifiable(res)
+```
+
+### Get symbolic formula for the causal effect P(y\|do(x))
+
+```{r}
+# convert to latex equation
+cat(paste("$", dosearch::get_formula(res), "$"))
+```
+
+### Get derivation trace
+
+```{r}
+dosearch::get_derivation(res,TRUE,TRUE)
+```
+
+### Plotting the derivation graph 
+
+```{r}
+# Install and import the DiagrammeR library
+if (!require('DiagrammeR')) {
+    install.packages('DiagrammeR')
+}
+library(DiagrammeR)
+# data <- "p(X,Y,Z)"
+# query <- "p(Y|do(X))"
+# g <-  "
+#   X -> Y 
+#   X -> Z 
+#   Z -> Y 
+#   Y <-> Z
+# "
+# 
+# # Create the graph
+# x <- dosearch(data, query, g)
+digraph <- dosearch::get_derivation(res, TRUE, TRUE)
+
+# Render the graph
+grViz(digraph)
+```
