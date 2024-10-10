@@ -1,0 +1,81 @@
+tibble [4,642 × 23] (S3: tbl_df/tbl/data.frame)
+ $ bweight   : num [1:4642] 3459 3260 3572 2948 2410 ...
+  ..- attr(*, "label")= chr "infant birthweight (grams)"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ mmarried  : dbl+lbl [1:4642] 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, ...
+   ..@ label       : chr "1 if mother married"
+   ..@ format.stata: chr "%10.0g"
+   ..@ labels      : Named num [1:2] 0 1
+   .. ..- attr(*, "names")= chr [1:2] "notmarried" "married"
+ $ mhisp     : num [1:4642] 0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, "label")= chr "1 if mother hispanic"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ fhisp     : num [1:4642] 0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, "label")= chr "1 if father hispanic"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ foreign   : num [1:4642] 0 1 1 0 0 0 0 0 0 0 ...
+  ..- attr(*, "label")= chr "1 if mother born abroad"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ alcohol   : num [1:4642] 0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, "label")= chr "1 if alcohol consumed during pregnancy"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ deadkids  : num [1:4642] 0 0 0 0 0 0 0 0 0 0 ...
+  ..- attr(*, "label")= chr "previous births where newborn died"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ mage      : num [1:4642] 24 20 22 26 20 27 27 24 21 30 ...
+  ..- attr(*, "label")= chr "mother's age"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ medu      : num [1:4642] 14 10 9 12 12 12 12 12 12 15 ...
+  ..- attr(*, "label")= chr "mother's education attainment"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ fage      : num [1:4642] 28 0 30 30 21 40 29 33 24 33 ...
+  ..- attr(*, "label")= chr "father's age"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ fedu      : num [1:4642] 16 0 9 12 14 12 14 12 9 15 ...
+  ..- attr(*, "label")= chr "father's education attainment"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ nprenatal : num [1:4642] 10 6 10 10 12 9 16 11 20 9 ...
+  ..- attr(*, "label")= chr "number of prenatal care visits"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ monthslb  : num [1:4642] 30 42 17 34 0 0 29 0 0 27 ...
+  ..- attr(*, "label")= chr "months since last birth"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ order     : num [1:4642] 2 3 3 2 1 1 3 1 1 2 ...
+  ..- attr(*, "label")= chr "order of birth of the infant"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ msmoke    : dbl+lbl [1:4642] 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, ...
+   ..@ label       : chr "cigarettes smoked during pregnancy"
+   ..@ format.stata: chr "%27.0g"
+   ..@ labels      : Named num [1:4] 0 1 2 3
+   .. ..- attr(*, "names")= chr [1:4] "0 daily" "1-5 daily" "6-10 daily" "11+ daily"
+ $ mbsmoke   : dbl+lbl [1:4642] 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, ...
+   ..@ label       : chr "1 if mother smoked"
+   ..@ format.stata: chr "%9.0g"
+   ..@ labels      : Named num [1:2] 0 1
+   .. ..- attr(*, "names")= chr [1:2] "nonsmoker" "smoker"
+ $ mrace     : num [1:4642] 1 0 1 1 1 1 1 1 1 1 ...
+  ..- attr(*, "label")= chr "1 if mother is white"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ frace     : num [1:4642] 1 0 1 1 1 1 1 1 1 1 ...
+  ..- attr(*, "label")= chr "1 if father is white"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ prenatal  : num [1:4642] 1 1 1 1 1 1 1 1 1 1 ...
+  ..- attr(*, "label")= chr "trimester of first prenatal care visit"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ birthmonth: num [1:4642] 12 7 3 1 3 4 12 6 6 12 ...
+  ..- attr(*, "label")= chr "month of birth"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ lbweight  : num [1:4642] 0 0 0 0 1 0 0 0 0 0 ...
+  ..- attr(*, "label")= chr "1 if low birthweight baby"
+  ..- attr(*, "format.stata")= chr "%9.0g"
+ $ fbaby     : dbl+lbl [1:4642] 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 1, 1, 0, 0, 0, ...
+   ..@ label       : chr "1 if first baby"
+   ..@ format.stata: chr "%9.0g"
+   ..@ labels      : Named num [1:2] 0 1
+   .. ..- attr(*, "names")= chr [1:2] "No" "Yes"
+ $ prenatal1 : dbl+lbl [1:4642] 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, ...
+   ..@ label       : chr "1 if first prenatal visit in 1 trimester"
+   ..@ format.stata: chr "%9.0g"
+   ..@ labels      : Named num [1:2] 0 1
+   .. ..- attr(*, "names")= chr [1:2] "No" "Yes"
+ - attr(*, "label")= chr "Excerpt from Cattaneo (2010) Journal of Econometrics 155: 138-154"

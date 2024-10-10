@@ -1,0 +1,152 @@
+---
+title: "chap10-standardization"
+author: "yousri elfattah"
+date: "2024-10-08"
+output: word_document
+---
+
+# Chapter 10
+
+# Causal Inference with Observational Data
+
+## Standardization Model
+
+**Load required libraries**.
+
+The CausalModels library is used to fit causal models like standardization.
+
+```{r}
+# Load libraries
+library(dplyr)
+library(haven)
+library(CausalModels)
+library(ggplot2)
+```
+
+## Loading the dataset:
+
+This code will output the first few rows and the structure of your dataset into text files, making it easier for you to read and review the results.
+
+1.  **Loading the Dataset**:
+    -   `read_dta("cattaneo2.dta")` reads the Stata dataset into R.
+2.  Viewing the first few rows of data:
+    -   as.data.frame(data) converting data to a standard data frame for full column display.
+    -   head(data_df) Inspect the first few rows and column names.
+3.  **Capturing str(data) Output**:
+    -   `capture.output(str(data))` captures the output of the str(data) function as a character vector.
+    -   `writeLines(str_output, "str_data_output.txt")` writes this output to a text file named str_data_output.txt.
+4.  **Printing Confirmation**:
+    -   `cat` statements print confirmation messages to the console, letting you know the outputs have been successfully saved.
+
+```{r}
+# Load necessary library
+library(haven)  # for read_dta function
+
+# Load the dataset
+data <- haven::read_dta("cattaneo2.dta")
+
+# Convert to standard data frame for full column display
+data_df <- as.data.frame(data)
+
+# Inspect the first few rows and column names
+head(data_df)
+
+# Check the structure of the dataset to see data types
+# Use capture.output to capture the output of str(data)
+str_output <- capture.output(str(data))
+writeLines(str_output, "str_data_output.txt")
+
+# Print to console to verify
+cat("Output of str(data) saved to str_data_output.txt\n")
+```
+
+## Initialize CausalModels Package
+
+The function `CausalModels::init_params` must be run first before any other function can run.
+
+Arguments:
+
+1.  **Outcome** - the outcome variable (must be continuous). We set outcome = bweight, which is the "infant birthweight (grams)"
+2.  **Treatment**—the treatment with the causal effect of interest on the outcome. We set treatment = mbsmoke, which is "1 if the mother smoked." It has a value of one if the mother is a smoker and 0 if she is a nonsmoker.
+3.  **Covariates** - a list/vector of covariate names for confounding adjustment. We set the confounders to the list of variables as follows:
+    -   **"mmarried"**: "[1 if mother married]{.underline}" takes the value 0 indicating "notmarried", and one indicating "married." 
+    -   **"prenatal1"**: "[1 if first prenatal visit in 1 trimester]{.underline}" takes the value "Yes"-"No"
+    -   **"fbaby"**: "[1 if first baby]{.underline}" takes the value "Yes"-"No"
+    -   **"medu"**: "[mother's education attainment]{.underline}"
+4.  **Data** - is the data frame containing the variables in the model.
+5.  **Simple** - a boolean indicator to build a default formula with interactions. If true, interactions will be excluded. If false, interactions will be included. By default, simple is set to false.
+
+The line
+
+`data$mbsmoke <- as.factor(data$mbsmoke)`
+
+converts the `data$mbsmoke` variable in the **cattaneo2** dataset into a factor. The mbsmoke variable indicates whether a mother smoked or not. By converting it to a factor, you inform R that this variable should be treated as categorical, which is crucial for models that handle categorical predictors differently than continuous variables. It allows R to properly interpret **mbsmoke** as levels of a categorical variable in the regression model you are running. The `as.factor` function converts a variable into a factor, an R data type used to represent categorical data.
+
+```{r}
+# Initialize the parameters for the CausalModels package
+data$mbsmoke <- as.factor(data$mbsmoke)
+confounders <- c("mmarried", "prenatal1", "fbaby","medu")
+CausalModels::init_params(outcome = bweight, treatment = mbsmoke, covariates = confounders, data)
+```
+
+## Fit standardization model
+
+Purpose: Fit a standardization model to the dataset data. data: The dataset containing your variables of interest. n.boot = 100: Specifies 100 bootstrap samples to calculate standard errors. simple = TRUE: Indicates that a simplified version of the model should be fitted.
+
+```{r}
+# Fit standardization model
+std_model <- standardization(data, n.boot = 100, simple = T)
+std_model
+
+```
+
+## Using the coefplot package to visualize the coefficients along with their 95% confidence intervals:
+
+**Explanation**:
+
+1.  **Load Packages**: Ensure both **coefplot** and **broom** are installed and loaded.
+
+2.  **Creating Tidy Data Frame**: Using `broom::tidy()` on your model object keeps it clean, but now, it isn't explicitly required by coefplot as coefplot can directly use the model object. For an introduction to broom, see <https://cran.r-project.org/web/packages/broom/vignettes/broom.html>
+
+3.  **Plotting with coefplot**:
+
+    -   Directly pass the model object to **coefplot**.
+
+    -   `intercept=TRUE` to include the intercept term in the plot.
+
+    -   `outerCI=1.96` to define 95% confidence intervals.
+
+```{r}
+# Install and load necessary packages
+#install.packages("coefplot")
+#install.packages("broom")
+library(coefplot)
+library(broom)
+
+# Create a tidy data frame for the model coefficients
+coef_df <- tidy(std_model$model)
+
+# Use coefplot for visualization
+coefplot(std_model$model, intercept=TRUE, outerCI=1.96) +
+  ggtitle("Standardization Model Coefficients with 95% Confidence Intervals") +
+  theme_minimal() +
+  theme(
+    text = element_text(size = 12),
+    plot.title = element_text(hjust = 0.5)
+  )
+```
+
+## Print Summary of Average Treatment Effect (ATE)
+
+Print the summary of the Average Treatment Effect (ATE) estimated by the model.
+
+```{r}
+print(std_model$ATE.summary)
+
+```
+
+### Session Info
+
+```{r}
+sessionInfo()
+```

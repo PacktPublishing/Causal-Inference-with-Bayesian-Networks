@@ -1,0 +1,189 @@
+---
+title: "chap10-ipw"
+author: "yousri elfattah"
+date: "2024-10-02"
+output: word_document
+---
+
+# Chapter 10
+
+# Causal Inference with Observational Data
+
+## Inverse Probability Weighting (IPW) and Propensity Score Matching (PSM)
+
+1.  **Fit the Propensity Score Model**: Use logistic regression to calculate propensity scores (the probability of treatment given covariates).
+2.  **Calculate Inverse Probability Weights**: Inverse the propensity scores to obtain weights.
+3.  **Fit the Weighted Outcome Model**: Use these weights in the outcome regression model to estimate the ATE.
+
+### Loading the dataset:
+
+```{r}
+# Load necessary library
+library(haven)  # for read_dta function
+
+# Load the dataset
+data <- haven::read_dta("cattaneo2.dta")
+
+# Convert to standard data frame for full column display
+data_df <- as.data.frame(data)
+
+# Inspect the first few rows and column names
+head(data_df)
+
+# Check the structure of the dataset to see data types
+# Use capture.output to capture the output of str(data)
+str_output <- capture.output(str(data))
+writeLines(str_output, "str_data_output.txt")
+
+# Print to console to verify
+cat("Output of str(data) saved to str_data_output.txt\n")
+```
+
+### Initialize the CausalModel
+
+```{r}
+library(CausalModels)
+library(survey)
+
+# Convert relevant columns to factors
+data$mbsmoke <- as.factor(data$mbsmoke)
+data$mage <- as.factor(data$mage)
+confounders <- c("mmarried", "prenatal1", "mage", "fbaby")
+
+# Initialize the parameters for CausalModels package
+CausalModels::init_params(
+  outcome = "bweight", 
+  treatment = "mbsmoke", 
+  covariates = confounders, 
+  data = data
+)
+
+
+```
+
+### Estimating Average Treatment Effect:
+
+```{r}
+# Fit the propensity score model
+propensity_model <- glm(
+  formula = mbsmoke ~ mage + mmarried + I(mmarried * mmarried) + prenatal1 + I(prenatal1 * prenatal1) + fbaby + I(fbaby * fbaby),
+  family = binomial(link = "logit"), 
+  data = data
+)
+
+# Calculate propensity scores
+propensity_scores <- predict(propensity_model, type = "response")
+
+# Compute inverse probability weights
+data$weights <- ifelse(data$mbsmoke == 1, 1 / propensity_scores, 1 / (1 - propensity_scores))
+
+# Fit the weighted outcome model using survey package
+outcome_model <- svyglm(
+  formula = bweight ~ mbsmoke + mage + mmarried + (mbsmoke * mmarried) + I(mmarried * mmarried) + prenatal1 + 
+            (mbsmoke * prenatal1) + I(prenatal1 * prenatal1) + fbaby + (mbsmoke * fbaby) + I(fbaby * fbaby),
+  design = svydesign(ids = ~1, weights = ~weights, data = data)
+)
+
+# Summary of the weighted outcome model
+summary(outcome_model)
+
+# Extract ATE
+ate_ipw <- coef(outcome_model)["mbsmoke1"]
+se_ipw <- sqrt(diag(vcov(outcome_model)))["mbsmoke1"]
+
+# Calculate Confidence Intervals
+ci_low <- ate_ipw - 1.96 * se_ipw
+ci_high <- ate_ipw + 1.96 * se_ipw
+
+# Print Average Treatment Effect (ATE)
+cat("Estimate - ", ate_ipw, "\n")
+cat("SE       - ", se_ipw, "\n")
+cat("95% CI   - (", ci_low, ", ", ci_high, ")\n")
+```
+
+## Balance Plots
+
+Creating balance plots to compare the distribution of covariates between treated and control groups, both before and after matching or weighting, is essential to check the quality of propensity score matching or weighting. This can be done using the MatchIt package in R for propensity score matching and the cobalt package for balance plots.
+
+### Steps to Create Balance Plots:
+
+1.  **Fit the Propensity Score Model**: Compute the propensity scores.
+2.  **Apply Matching/Weighting**: Use MatchIt to perform matching.
+3.  **Balance Plots**: Use cobalt to create balance box plots for covariates.
+
+```{r}
+# Load necessary libraries
+library(MatchIt)
+library(ggplot2)
+library(tidyverse)
+
+# Assuming 'data' is your dataset
+data$mbsmoke <- as.factor(data$mbsmoke)
+
+# Perform propensity score matching
+psm <- matchit(mbsmoke ~ mmarried + prenatal1 + mage + fbaby,
+               data = data,
+               method = "nearest",
+               distance = "logit")
+
+# Extract the matched data, specifying a different name for weights
+matched_data <- match.data(psm, weights = "matching_weights")
+
+# Extract common columns for raw and matched data
+common_columns <- intersect(names(data), names(matched_data))
+
+# Subset data to have the same columns
+data_common <- data[common_columns]
+matched_data_common <- matched_data[common_columns]
+
+# Add Group column for comparison
+data_common$Group <- "Raw"
+matched_data_common$Group <- "Matched"
+
+# Combine both datasets
+combined_data <- rbind(data_common, matched_data_common)
+
+# Function to create normalized PMF plots for covariates
+create_pmf_plots <- function(combined_data, covariate) {
+  # Create a subset of data for plotting
+  plot_data <- combined_data %>%
+    select(Group, mbsmoke, all_of(covariate)) %>%
+    gather(key = "Variable", value = "Value", -Group, -mbsmoke)
+  
+  # Convert Factors to Numeric for PMF
+  if (is.factor(plot_data$Value)) {
+    plot_data$Value <- as.numeric(as.factor(plot_data$Value))
+  }
+  
+  # Calculate normalized counts within each group and treatment status
+  plot_data <- plot_data %>%
+    group_by(Group, mbsmoke, Value) %>%
+    summarize(Count = n()) %>%
+    group_by(Group, mbsmoke) %>%
+    mutate(Probability = Count / sum(Count)) %>%
+    ungroup()
+  
+  # Create PMF plots
+  plot <- ggplot(plot_data, aes(x = factor(Value), y = Probability, fill = mbsmoke)) +
+    geom_bar(stat = "identity", position = "dodge", alpha = 0.7) +
+    facet_grid(Group ~ mbsmoke, scales = "free_x") +
+    theme_minimal() +
+    labs(title = paste("Normalized PMF Plot for", covariate), x = covariate, y = "Probability")
+  
+  print(plot)
+}
+
+# List of covariates
+covariates <- c("mmarried", "prenatal1", "mage", "fbaby")
+
+# Loop to create and print PMF plots for all covariates
+for (covariate in covariates) {
+  create_pmf_plots(combined_data, covariate)
+}
+```
+
+### Session Info
+
+```{r}
+sessionInfo()
+```

@@ -1,0 +1,175 @@
+---
+title: "chap10-psm"
+author: "yousri elfattah"
+date: "2024-10-06"
+output: word_document
+---
+
+# Chapter 10
+
+# Causal Inference with Observational Data
+
+## Propensity Score Matching (PSM)
+
+### Loading the Cattaneo2 dataset
+
+```{r}
+# Load necessary library
+library(haven)  # for read_dta function
+
+# Load the dataset
+data <- haven::read_dta("cattaneo2.dta")
+
+# Convert to standard data frame for full column display
+data_df <- as.data.frame(data)
+
+# Inspect the first few rows and column names
+head(data_df)
+
+# Check the structure of the dataset to see data types
+# Use capture.output to capture the output of str(data)
+str_output <- capture.output(str(data))
+writeLines(str_output, "str_data_output.txt")
+
+# Print to console to verify
+cat("Output of str(data) saved to str_data_output.txt\n")
+```
+
+### Average Treatment Effect (ATE)
+
+The code calculates the mean birth weights for smoking and non-smoking mothers and computes the ATE by subtracting the mean birth weight of non-smokers from that of smokers. Standard Error and Confidence Interval via Bootstrapping: We can estimate the SE and CI using a non-parametric bootstrap method. The bootstrap involves repeatedly resampling the matched dataset with replacement, recalculating the ATE for each resample, and then using the distribution of these ATE estimates to compute the SE and CI.
+
+```{r}
+# Load necessary libraries
+library(MatchIt)
+library(dplyr)
+library(boot)
+
+# Assuming 'data' is your dataset
+data$mbsmoke <- as.factor(data$mbsmoke)
+
+# Perform propensity score matching
+psm <- matchit(mbsmoke ~ mmarried + prenatal1 + mage + fbaby,
+               data = data,
+               method = "nearest",
+               distance = "logit")
+
+# Extract the matched data, specifying a different name for weights
+matched_data <- match.data(psm, weights = "matching_weights")
+
+# Calculate ATE
+mean_bw_smoke <- matched_data %>%
+  filter(mbsmoke == 1) %>%
+  summarize(mean_bweight = mean(bweight, na.rm = TRUE)) %>%
+  pull(mean_bweight)
+
+mean_bw_nosmoke <- matched_data %>%
+  filter(mbsmoke == 0) %>%
+  summarize(mean_bweight = mean(bweight, na.rm = TRUE)) %>%
+  pull(mean_bweight)
+
+ATE <- mean_bw_smoke - mean_bw_nosmoke
+
+print(paste("Mean birth weight for smoking mothers:", mean_bw_smoke))
+print(paste("Mean birth weight for non-smoking mothers:", mean_bw_nosmoke))
+print(paste("Average Treatment Effect = ", ATE))
+
+# Define a function for bootstrapping the ATE
+bootstrap_ate <- function(data, indices) {
+  sampled_data <- data[indices, ]
+  
+  mean_bw_smoke_boot <- sampled_data %>%
+    filter(mbsmoke == 1) %>%
+    summarize(mean_bweight = mean(bweight, na.rm = TRUE)) %>%
+    pull(mean_bweight)
+  
+  mean_bw_nosmoke_boot <- sampled_data %>%
+    filter(mbsmoke == 0) %>%
+    summarize(mean_bweight = mean(bweight, na.rm = TRUE)) %>%
+    pull(mean_bweight)
+  
+  return(mean_bw_smoke_boot - mean_bw_nosmoke_boot)
+}
+
+# Perform bootstrapping with 1000 replications
+set.seed(123)  # For reproducibility
+boot_results <- boot(data = matched_data, statistic = bootstrap_ate, R = 1000)
+
+# Calculate 95% CI from bootstrapped results
+boot_ci <- boot.ci(boot_results, type = "perc")
+
+# Print results
+print(paste("Bootstrap Standard Error = ", sd(boot_results$t)))
+print(paste("95% Confidence Interval = (", boot_ci$percent[4], ", ", boot_ci$percent[5], ")", sep=""))
+
+# Alternatively, you can use boot_ci$perc to see percentile delimiters: 
+print(boot_ci)
+```
+
+## Balance Plot for Propensity Scores
+
+### Explanation
+
+-   **Subset Data to Common Columns**: Use intersect to retain only the common columns in data and matched_data.
+
+-   **Add Propensity Score Column**: Add the computed propensity score to both raw and matched datasets.
+
+-   **Add Group Column**: Differentiate between raw and matched data.
+
+-   **Combine Data**: Use rbind after ensuring both datasets have the same structure.
+
+```{r}
+# Load necessary libraries
+# library(MatchIt)
+library(ggplot2)
+library(tidyverse)
+
+# # Assuming 'data' is your dataset
+# data$mbsmoke <- as.factor(data$mbsmoke)
+# 
+# # Perform propensity score matching
+# psm <- matchit(mbsmoke ~ mmarried + prenatal1 + mage + fbaby,
+#                data = data,
+#                method = "nearest",
+#                distance = "logit")
+# 
+# # Extract the matched data, ensuring there's no name conflict with weights
+# matched_data <- match.data(psm, weights = "matching_weights")
+
+# Extract propensity scores
+data$propensity_score <- psm$distance
+matched_data$propensity_score <- matched_data$distance
+
+# Extract common columns
+common_columns <- intersect(names(data), names(matched_data))
+
+# Subset data to have the same columns
+data_common <- data[common_columns]
+matched_data_common <- matched_data[common_columns]
+
+# Add Group column for comparison
+data_common$Group <- "Raw"
+matched_data_common$Group <- "Matched"
+
+# Combine raw and matched propensity scores
+combined_data <- rbind(data_common, matched_data_common)
+
+# Function to create box plot for propensity scores
+create_propensity_score_plot <- function(combined_data) {
+  ggplot(combined_data, aes(x = Group, y = propensity_score, fill = mbsmoke)) +
+    geom_boxplot() +
+    theme_minimal() +
+    labs(title = "Balance Plot for Propensity Score", 
+         x = "Group", 
+         y = "Propensity Score")
+}
+
+# Create and print the propensity score balance plot
+print(create_propensity_score_plot(combined_data))
+```
+
+### Session Info
+
+```{r}
+sessionInfo()
+```
