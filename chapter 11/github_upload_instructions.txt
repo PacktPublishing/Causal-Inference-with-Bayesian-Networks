@@ -1,0 +1,78 @@
+# GitHub Upload Instructions
+
+## Authentication Issue
+GitHub no longer supports password authentication for Git operations. Instead, you need to use a Personal Access Token (PAT) or SSH key.
+
+## Option 1: Using a Personal Access Token (Recommended for quick setup)
+
+1. Create a Personal Access Token on GitHub:
+   - Go to GitHub.com and log in
+   - Click on your profile picture in the top right corner
+   - Select "Settings"
+   - Scroll down and select "Developer settings" from the left sidebar
+   - Select "Personal access tokens" and then "Tokens (classic)"
+   - Click "Generate new token" and select "Generate new token (classic)"
+   - Give your token a descriptive name
+   - Select the necessary scopes (at minimum, select "repo")
+   - Click "Generate token"
+   - Copy the token (you won't be able to see it again!)
+
+2. Use the token for authentication:
+   ```
+   git remote set-url origin https://YOUR_USERNAME:YOUR_TOKEN@github.com/PacktPublishing/Causal-Inference-with-Bayesian-Networks.git
+   ```
+   Replace YOUR_USERNAME with your GitHub username and YOUR_TOKEN with the personal access token you generated.
+
+3. Push your changes:
+   ```
+   git push -u origin main
+   ```
+
+## Option 2: Using SSH Authentication (Better for long-term use)
+
+1. Check if you already have an SSH key:
+   ```
+   ls -la ~/.ssh
+   ```
+
+2. If you don't have an SSH key, generate one:
+   ```
+   ssh-keygen -t ed25519 -C "your_email@example.com"
+   ```
+   Follow the prompts to complete the key generation.
+
+3. Add your SSH key to the ssh-agent:
+   ```
+   eval "$(ssh-agent -s)"
+   ssh-add ~/.ssh/id_ed25519
+   ```
+
+4. Add your SSH key to your GitHub account:
+   - Copy your SSH public key to the clipboard:
+     ```
+     cat ~/.ssh/id_ed25519.pub | pbcopy
+     ```
+   - Go to GitHub.com and log in
+   - Click on your profile picture in the top right corner
+   - Select "Settings"
+   - Select "SSH and GPG keys" from the left sidebar
+   - Click "New SSH key"
+   - Give your key a descriptive title
+   - Paste your key into the "Key" field
+   - Click "Add SSH key"
+
+5. Change your remote URL to use SSH:
+   ```
+   git remote set-url origin git@github.com:PacktPublishing/Causal-Inference-with-Bayesian-Networks.git
+   ```
+
+6. Push your changes:
+   ```
+   git push -u origin main
+   ```
+
+## Verifying the Upload
+After successfully pushing your changes, you can verify the upload by visiting the GitHub repository at:
+https://github.com/PacktPublishing/Causal-Inference-with-Bayesian-Networks
+
+You should see all your files and commit history there.
