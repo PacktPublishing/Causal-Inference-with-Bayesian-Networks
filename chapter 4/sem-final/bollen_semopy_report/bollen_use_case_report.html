@@ -1,0 +1,397 @@
+<html><head><meta charset='utf-8'><title>Bollen Political Democracy - semopy report (fallback)</title>
+<style>body{font-family:Arial,Helvetica,sans-serif;margin:16px;} table{border-collapse:collapse;} th,td{border:1px solid #ccc;padding:6px 8px;} h1,h2{margin-top:1.2em;}</style>
+</head><body>
+<h1>Bollen (1989) Political Democracy - semopy report</h1>
+<p>Sample size (n): 75</p>
+<h2>Model specification</h2>
+<pre>
+# Measurement model
+ind60 =~ x1 + x2 + x3
+dem60 =~ y1 + y2 + y3 + y4
+dem65 =~ y5 + y6 + y7 + y8
+
+# Structural regressions
+dem60 ~ ind60
+dem65 ~ ind60 + dem60
+
+# Residual correlations (same indicators across time)
+y1 ~~ y5
+y2 ~~ y6
+y3 ~~ y7
+y4 ~~ y8
+</pre>
+<h2>Parameter estimates</h2>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>lval</th>
+      <th>op</th>
+      <th>rval</th>
+      <th>Estimate</th>
+      <th>Std. Err</th>
+      <th>z-value</th>
+      <th>p-value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>dem60</td>
+      <td>~</td>
+      <td>ind60</td>
+      <td>1.4345</td>
+      <td>0.3848</td>
+      <td>3.7282</td>
+      <td>0.0002</td>
+    </tr>
+    <tr>
+      <td>dem65</td>
+      <td>~</td>
+      <td>ind60</td>
+      <td>0.5069</td>
+      <td>0.2090</td>
+      <td>2.4253</td>
+      <td>0.0153</td>
+    </tr>
+    <tr>
+      <td>dem65</td>
+      <td>~</td>
+      <td>dem60</td>
+      <td>0.8158</td>
+      <td>0.1000</td>
+      <td>8.1558</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>x1</td>
+      <td>~</td>
+      <td>ind60</td>
+      <td>1.0000</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>x2</td>
+      <td>~</td>
+      <td>ind60</td>
+      <td>2.1804</td>
+      <td>0.1387</td>
+      <td>15.7252</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>x3</td>
+      <td>~</td>
+      <td>ind60</td>
+      <td>1.8188</td>
+      <td>0.1520</td>
+      <td>11.9694</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>y1</td>
+      <td>~</td>
+      <td>dem60</td>
+      <td>1.0000</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>y2</td>
+      <td>~</td>
+      <td>dem60</td>
+      <td>1.3876</td>
+      <td>0.1875</td>
+      <td>7.3994</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>y3</td>
+      <td>~</td>
+      <td>dem60</td>
+      <td>1.0529</td>
+      <td>0.1608</td>
+      <td>6.5477</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>y4</td>
+      <td>~</td>
+      <td>dem60</td>
+      <td>1.3677</td>
+      <td>0.1532</td>
+      <td>8.9274</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>y5</td>
+      <td>~</td>
+      <td>dem65</td>
+      <td>1.0000</td>
+      <td>-</td>
+      <td>-</td>
+      <td>-</td>
+    </tr>
+    <tr>
+      <td>y6</td>
+      <td>~</td>
+      <td>dem65</td>
+      <td>1.3170</td>
+      <td>0.1801</td>
+      <td>7.3137</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>y7</td>
+      <td>~</td>
+      <td>dem65</td>
+      <td>1.3259</td>
+      <td>0.1741</td>
+      <td>7.6173</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>y8</td>
+      <td>~</td>
+      <td>dem65</td>
+      <td>1.3911</td>
+      <td>0.1713</td>
+      <td>8.1190</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>dem60</td>
+      <td>~~</td>
+      <td>dem60</td>
+      <td>3.6789</td>
+      <td>0.8857</td>
+      <td>4.1536</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>dem65</td>
+      <td>~~</td>
+      <td>dem65</td>
+      <td>0.3495</td>
+      <td>0.1875</td>
+      <td>1.8639</td>
+      <td>0.0623</td>
+    </tr>
+    <tr>
+      <td>ind60</td>
+      <td>~~</td>
+      <td>ind60</td>
+      <td>0.4486</td>
+      <td>0.0867</td>
+      <td>5.1719</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>y1</td>
+      <td>~~</td>
+      <td>y5</td>
+      <td>0.8920</td>
+      <td>0.3667</td>
+      <td>2.4327</td>
+      <td>0.0150</td>
+    </tr>
+    <tr>
+      <td>y1</td>
+      <td>~~</td>
+      <td>y1</td>
+      <td>2.1829</td>
+      <td>0.4567</td>
+      <td>4.7792</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>y2</td>
+      <td>~~</td>
+      <td>y6</td>
+      <td>1.8961</td>
+      <td>0.7620</td>
+      <td>2.4885</td>
+      <td>0.0128</td>
+    </tr>
+    <tr>
+      <td>y2</td>
+      <td>~~</td>
+      <td>y2</td>
+      <td>6.4932</td>
+      <td>1.2318</td>
+      <td>5.2712</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>y3</td>
+      <td>~~</td>
+      <td>y7</td>
+      <td>1.2717</td>
+      <td>0.6235</td>
+      <td>2.0396</td>
+      <td>0.0414</td>
+    </tr>
+    <tr>
+      <td>y3</td>
+      <td>~~</td>
+      <td>y3</td>
+      <td>5.4971</td>
+      <td>0.9925</td>
+      <td>5.5386</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>y4</td>
+      <td>~~</td>
+      <td>y8</td>
+      <td>0.1394</td>
+      <td>0.4641</td>
+      <td>0.3004</td>
+      <td>0.7639</td>
+    </tr>
+    <tr>
+      <td>y4</td>
+      <td>~~</td>
+      <td>y4</td>
+      <td>2.4693</td>
+      <td>0.6604</td>
+      <td>3.7390</td>
+      <td>0.0002</td>
+    </tr>
+    <tr>
+      <td>x1</td>
+      <td>~~</td>
+      <td>x1</td>
+      <td>0.0816</td>
+      <td>0.0195</td>
+      <td>4.1766</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>x2</td>
+      <td>~~</td>
+      <td>x2</td>
+      <td>0.1196</td>
+      <td>0.0700</td>
+      <td>1.7074</td>
+      <td>0.0877</td>
+    </tr>
+    <tr>
+      <td>x3</td>
+      <td>~~</td>
+      <td>x3</td>
+      <td>0.4665</td>
+      <td>0.0902</td>
+      <td>5.1721</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>y5</td>
+      <td>~~</td>
+      <td>y5</td>
+      <td>2.6627</td>
+      <td>0.5062</td>
+      <td>5.2600</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>y6</td>
+      <td>~~</td>
+      <td>y6</td>
+      <td>4.2497</td>
+      <td>0.8171</td>
+      <td>5.2011</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>y7</td>
+      <td>~~</td>
+      <td>y7</td>
+      <td>3.5613</td>
+      <td>0.7123</td>
+      <td>4.9997</td>
+      <td>0.0000</td>
+    </tr>
+    <tr>
+      <td>y8</td>
+      <td>~~</td>
+      <td>y8</td>
+      <td>2.5295</td>
+      <td>0.6085</td>
+      <td>4.1570</td>
+      <td>0.0000</td>
+    </tr>
+  </tbody>
+</table>
+<h2>Fit statistics</h2>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Metric</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>DoF</td>
+      <td>{'Value': 37}</td>
+    </tr>
+    <tr>
+      <td>DoF Baseline</td>
+      <td>{'Value': 55}</td>
+    </tr>
+    <tr>
+      <td>chi2</td>
+      <td>{'Value': 50.83538630611972}</td>
+    </tr>
+    <tr>
+      <td>chi2 p-value</td>
+      <td>{'Value': 0.06448870125505324}</td>
+    </tr>
+    <tr>
+      <td>chi2 Baseline</td>
+      <td>{'Value': 730.6545774706151}</td>
+    </tr>
+    <tr>
+      <td>CFI</td>
+      <td>{'Value': 0.9795229888652365}</td>
+    </tr>
+    <tr>
+      <td>GFI</td>
+      <td>{'Value': 0.9304248712406593}</td>
+    </tr>
+    <tr>
+      <td>AGFI</td>
+      <td>{'Value': 0.8965775113036828}</td>
+    </tr>
+    <tr>
+      <td>NFI</td>
+      <td>{'Value': 0.9304248712406593}</td>
+    </tr>
+    <tr>
+      <td>TLI</td>
+      <td>{'Value': 0.9695611996645407}</td>
+    </tr>
+    <tr>
+      <td>RMSEA</td>
+      <td>{'Value': 0.07108515635763886}</td>
+    </tr>
+    <tr>
+      <td>AIC</td>
+      <td>{'Value': 56.644389698503474}</td>
+    </tr>
+    <tr>
+      <td>BIC</td>
+      <td>{'Value': 123.85154499105647}</td>
+    </tr>
+    <tr>
+      <td>LogLik</td>
+      <td>{'Value': 0.677805150748263}</td>
+    </tr>
+  </tbody>
+</table>
+<h2>Model diagram</h2>
+<img src='plot/bollen_semopy_model.png' alt='Model diagram' style='max-width:100%;height:auto;'>
+<p style='margin-top:1.5em;color:#555;'>Generated by fallback HTML writer because semopy.report was unavailable or failed.</p>
+</body></html>

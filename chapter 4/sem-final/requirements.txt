@@ -1,0 +1,13 @@
+# Project dependencies for chapter04/sem
+# Install with: pip install -r requirements.txt
+
+# Structural Equation Modeling in Python
+semopy>=2.3,<3.0
+
+# Optional: numerical stack that semopy uses (let pip resolve compatible versions)
+numpy
+pandas
+scipy
+
+# Optional but recommended for visualization fallbacks
+matplotlib
