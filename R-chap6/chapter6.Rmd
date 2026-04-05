@@ -1,7 +1,7 @@
 ---
 title: "chapter_06"
 author: "yousri elfattah"
-date: "2024-05-15"
+date: "2026-03-18"
 output:
   word_document: default
   html_notebook: default
@@ -101,7 +101,7 @@ The code below is an example of checking that node {Y,Z} d-separates nodes E and
 (E ⟂ X \| Y, Z)
 
 ```{r}
-dSep(G, "E", "X", c("Y","Z"))
+ggm::dSep(G, "E", "X", c("Y","Z"))
 ```
 
 The code below is an example of checking that node {Y,Z} d-separates nodes E and X in the DAG of the circuit example.
@@ -391,3 +391,11 @@ To compute the junction tree that orders the maximum cliques in a tree-structure
 ```{r}
 gRbase::rip(TmG)
 ```
+```{r}
+# List all loaded packages
+(.packages())
+
+# Or for more detailed session information
+sessionInfo()
+```
+
